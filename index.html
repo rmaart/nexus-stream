@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NexusStream | Agent-Powered Media</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --cyan: #00f3ff; --purple: #7b2cbf; --dark: #0a0e17; --glass: rgba(255,255,255,0.08); --border: rgba(0,243,255,0.3); }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Exo 2',sans-serif; background:var(--dark); color:#fff; overflow-x:hidden; line-height:1.5; }
+    #bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background:radial-gradient(ellipse at bottom, #1a1a2e 0%, var(--dark) 70%); }
+    .p { position:absolute; border-radius:50%; background:var(--cyan); animation:f 15s infinite linear; opacity:0.3; }
+    @keyframes f { 0%{transform:translateY(0);opacity:0.3} 50%{opacity:0.6} 100%{transform:translateY(-100vh) translateX(30px);opacity:0.2} }
+    
+    header { padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); backdrop-filter:blur(10px); position:sticky; top:0; z-index:100; background:rgba(10,14,23,0.9); }
+    .logo { font-family:'Orbitron',sans-serif; font-size:1.6rem; font-weight:700; background:linear-gradient(90deg,var(--cyan),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    nav a { color:#ddd; text-decoration:none; margin-left:1.2rem; font-size:0.9rem; transition:color 0.2s; }
+    nav a:hover { color:var(--cyan); }
+
+    .hero { text-align:center; padding:2rem 1rem; }
+    .hero h1 { font-family:'Orbitron',sans-serif; font-size:2rem; margin-bottom:0.5rem; }
+    .hero p { color:#aaa; font-size:0.9rem; }
+
+    #token-widget { position:fixed; top:15px; right:20px; background:var(--glass); border:1px solid var(--cyan); border-radius:50px; padding:0.5rem 1.2rem; display:flex; align-items:center; gap:8px; cursor:pointer; z-index:150; box-shadow:0 0 15px rgba(0,243,255,0.2); transition:transform 0.2s; }
+    #token-widget:hover { transform:translateY(-2px); }
+
+    .grid { max-width:1100px; margin:0 auto; padding:1.5rem; display:grid; gap:1.5rem; grid-template-columns:1fr 1fr; }
+    .panel { background:var(--glass); border:1px solid var(--border); border-radius:16px; padding:1.2rem; backdrop-filter:blur(10px); }
+    .panel h2 { margin-bottom:1rem; font-size:1.1rem; display:flex; align-items:center; gap:8px; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; }
+    .card { background:rgba(255,255,255,0.04); border:1px solid rgba(0,243,255,0.15); border-radius:12px; overflow:hidden; transition:transform 0.2s; cursor:pointer; }
+    .card:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,0.3); }
+    .card img { width:100%; height:100px; object-fit:cover; background:#111; }
+    .card-body { padding:0.7rem; }
+    .card-title { font-weight:600; font-size:0.85rem; margin-bottom:0.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta { font-size:0.7rem; color:#888; display:flex; justify-content:space-between; }
+    .actions { display:flex; gap:0.5rem; margin-top:0.6rem; }
+    .btn { flex:1; border:none; padding:0.4rem; border-radius:6px; font-size:0.75rem; cursor:pointer; transition:0.2s; }
+    .btn-primary { background:var(--cyan); color:var(--dark); font-weight:600; }
+    .btn-sec { background:var(--purple); color:#fff; }
+    .btn:hover { filter:brightness(1.1); }
+
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center; padding:1rem; }
+    .modal.active { display:flex; }
+    .modal-content { background:var(--dark); border:1px solid var(--border); border-radius:16px; padding:1.5rem; max-width:400px; width:100%; position:relative; text-align:center; }
+    .close { position:absolute; top:10px; right:15px; font-size:1.5rem; cursor:pointer; color:#888; }
+    .close:hover { color:var(--cyan); }
+
+    .sync-box { background:linear-gradient(145deg, #121218, #0f0f16); border:2px solid var(--cyan); border-radius:16px; padding:1.5rem; max-width:450px; width:90%; text-align:center; }
+    .sync-img { width:100%; height:160px; object-fit:contain; background:#000; border-radius:10px; margin:0.5rem 0; }
+    .progress { height:6px; background:#222; border-radius:3px; margin:1rem 0; overflow:hidden; }
+    .bar { height:100%; width:0%; background:linear-gradient(90deg, var(--cyan), var(--purple)); transition:width 0.1s linear; }
+    .sync-btn { width:100%; padding:0.9rem; border:2px solid var(--cyan); background:transparent; color:var(--cyan); font-family:'Orbitron'; border-radius:10px; cursor:pointer; margin-top:1rem; user-select:none; -webkit-tap-highlight-color: transparent; }
+    .sync-btn:active { background:var(--cyan); color:var(--dark); transform:scale(0.98); }
+    .sync-btn.holding { background:var(--cyan); color:var(--dark); }
+
+    #admin-panel { display:none; max-width:1000px; margin:2rem auto; background:var(--glass); border:1px solid #ff4444; border-radius:12px; padding:1.5rem; }
+    .tabs { display:flex; gap:1rem; margin-bottom:1rem; border-bottom:1px solid #333; padding-bottom:0.5rem; }
+    .tab { background:none; border:none; color:#aaa; cursor:pointer; padding:0.3rem 0.8rem; }
+    .tab.active { color:var(--cyan); border-bottom:2px solid var(--cyan); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.8rem; }
+    th, td { padding:0.6rem; border-bottom:1px solid #333; text-align:left; }
+    th { color:var(--cyan); }
+    input, select { width:100%; padding:0.5rem; background:#111; border:1px solid #444; border-radius:6px; color:#fff; margin:0.3rem 0; }
+    .log-row { font-family:monospace; font-size:0.75rem; color:#999; padding:0.3rem 0; border-bottom:1px dashed #333; }
+    .status-new { color:#4ade80; }
+    .status-contacted { color:#facc15; }
+
+    .loader { text-align:center; padding:1.5rem; color:var(--cyan); font-family:'Orbitron'; }
+    .empty { text-align:center; padding:1.5rem; color:#777; }
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--dark); border:1px solid var(--cyan); padding:0.7rem 1.2rem; border-radius:8px; z-index:300; opacity:0; transition:0.3s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(-10px); }
+
+    @media(max-width:800px) { .grid { grid-template-columns:1fr; } nav { display:none; } .hero h1 { font-size:1.5rem; } }
+  </style>
+</head>
+<body>
+  <div id="bg"></div>
+  <header>
+    <div class="logo">NEXUSSTREAM</div>
+    <nav><a href="#movies">Movies</a><a href="#trailers">Trailers</a></nav>
+  </header>
+
+  <div class="hero">
+    <h1>Stream. Sync. Unlock.</h1>
+    <p>Agent-powered ad discovery • Treasury management • 5 Tokens on signup</p>
+  </div>
+
+  <div id="token-widget" onclick="openVault()">
+    <span>🔹</span><span id="t-count" style="font-family:'Orbitron'; font-weight:700;">0</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel" id="movies">
+      <h2 style="color:var(--cyan);">🎥 Full Movies</h2>
+      <div class="cards" id="m-cards"><div class="loader">Loading...</div></div>
+    </div>
+    <div class="panel" id="trailers">
+      <h2 style="color:var(--purple);">🎞️ Trailers</h2>
+      <div class="cards" id="t-cards"><div class="loader">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('auth-modal')">&times;</span>
+      <h2 style="color:var(--cyan); margin-bottom:0.5rem;">✨ Join NexusStream</h2>
+      <p style="color:#999; font-size:0.8rem; margin-bottom:1rem;">Phone + Password. 5 Tokens + 30 Days Free.</p>
+      <input id="a-phone" type="tel" placeholder="Phone number">
+      <input id="a-pass" type="password" placeholder="Password">
+      <button class="btn btn-primary" style="margin-top:0.8rem;" onclick="register()">Create Account</button>
+    </div>
+  </div>
+
+  <!-- Sync Modal -->
+  <div id="sync-modal" class="modal">
+    <div class="sync-box">
+      <span class="close" onclick="abortSync()" style="color:#888;">&times;</span>
+      <h3 style="color:var(--cyan); font-family:'Orbitron'; margin-bottom:0.5rem;">⚡ DATA SYNC</h3>
+      <p style="color:#aaa; font-size:0.8rem;">Hold to calibrate & earn tokens</p>
+      <img id="sync-img" class="sync-img" src="" alt="Ad">
+      <div class="progress"><div id="sync-bar" class="bar"></div></div>
+      <div id="sync-timer" style="font-family:'Orbitron'; color:var(--cyan); margin-bottom:0.5rem;">0.0s / 5.0s</div>
+      <button id="sync-btn" class="sync-btn">HOLD TO SYNC</button>
+    </div>
+  </div>
+
+  <!-- Vault Modal -->
+  <div id="vault-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('vault-modal')">&times;</span>
+      <h2 style="color:var(--cyan); margin-bottom:0.5rem;">🔹 Token Vault</h2>
+      <div style="font-size:2rem; font-family:'Orbitron'; margin:0.8rem 0;" id="v-count">0</div>
+      <button class="btn btn-primary" onclick="claimDaily()" style="margin-bottom:0.5rem;">🌅 Claim Daily Bonus (+2)</button>
+      <button class="btn btn-sec" onclick="closeModal('vault-modal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Video Modal -->
+  <div id="video-modal" class="modal">
+    <div class="modal-content" style="max-width:800px; padding:0; overflow:hidden; border:2px solid var(--cyan);">
+      <span class="close" onclick="closeModal('video-modal')" style="color:#000; background:rgba(255,255,255,0.2); border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">&times;</span>
+      <iframe id="yt-frame" src="" style="width:100%; aspect-ratio:16/9; border:none; display:block;" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h3 style="color:var(--cyan);">🕵️ Agent & Treasury Hub</h3>
+      <button class="btn btn-sec" onclick="document.getElementById('admin-panel').style.display='none'">Hide</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('treasury')">Treasury</button>
+      <button class="tab" onclick="switchTab('leads')">Ad Leads</button>
+      <button class="tab" onclick="switchTab('logs')">Agent Logs</button>
+    </div>
+    <div id="treasury-tab" class="tab-content active">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div style="background:#111; padding:1rem; border-radius:8px;"><div style="color:#888; font-size:0.8rem;">Platform Balance</div><div id="treasury-balance" style="font-size:1.8rem; font-family:'Orbitron'; color:var(--cyan);">$0.00</div></div>
+        <div style="background:#111; padding:1rem; border-radius:8px;"><div style="color:#888; font-size:0.8rem;">Manual Deposit</div><div style="display:flex; gap:0.5rem;"><input id="deposit-amount" type="number" placeholder="Amount"><button class="btn btn-primary" onclick="deposit()">Deposit</button></div></div>
+      </div>
+      <button class="btn btn-sec" style="margin-top:1rem; width:100%;" onclick="triggerAgent()">🤖 Run Agent Now</button>
+    </div>
+    <div id="leads-tab" class="tab-content">
+      <div style="display:flex; gap:0.5rem; margin-bottom:1rem;"><button class="btn btn-sec" onclick="loadLeads('all')">All</button><button class="btn btn-sec" onclick="loadLeads('new')">New</button><button class="btn btn-sec" onclick="loadLeads('contacted')">Contacted</button></div>
+      <table id="leads-table"><tr><th>Company</th><th>Domain</th><th>Score</th><th>Status</th><th>Action</th></tr></table>
+    </div>
+    <div id="logs-tab" class="tab-content"><div id="agent-logs" style="max-height:300px; overflow-y:auto;"></div></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <footer style="text-align:center; padding:2rem 1rem; color:#666; font-size:0.75rem; border-top:1px solid #222;">© 2025 NexusStream • Autonomous Agent • Compliant Outreach • Future-Ready</footer>
+
+  <script>
+    // 🔽 STEP 1: REPLACE THIS WITH YOUR ACTUAL RENDER URL (Keep /api at the end)
+    const API = "https://nexusstream.onrender.com/api";
+
+    let token = localStorage.getItem("nexus_token");
+    let tokens = 5, pendingAction = null, currentAd = null;
+    let syncInterval, syncTime = 0, syncTarget = 5;
+
+    // UI Helpers
+    function toast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2500); }
+    function openModal(id) { document.getElementById(id).classList.add("active"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("active"); if(id==="video-modal") document.getElementById("yt-frame").src=""; }
+    function updateUI() { document.getElementById("t-count").textContent=tokens; document.getElementById("v-count").textContent=tokens; if(!token) setTimeout(()=>openModal("auth-modal"),1000); }
+
+    // Auth
+    async function register() {
+      const p=document.getElementById("a-phone").value, pass=document.getElementById("a-pass").value;
+      if(!p || pass.length<4) return toast("Enter phone & 4+ char password");
+      try {
+        const r=await fetch(`${API}/auth/register`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:p,password:pass})});
+        const d=await r.json(); if(!r.ok) throw new Error(d.detail);
+        localStorage.setItem("nexus_token", d.token); token=d.token; tokens=d.tokens;
+        updateUI(); closeModal("auth-modal"); toast("🎉 5 Tokens + 30 Days Free!");
+      } catch(e) { toast("❌ "+e.message); }
+    }
+
+    // Media Loading
+    async function load(type, target) {
+      const el=document.getElementById(target);
+      try {
+        const res=await fetch(`${API}/movies/${type}`); const data=await res.json();
+        if(!data.length) { el.innerHTML='<div class="empty">No content yet.</div>'; return; }
+        el.innerHTML=data.map(m=>`<div class="card"><img src="${m.thumbnail}" alt="${m.title}" onerror="this.src='https://via.placeholder.com/180x100/111/00f3ff?text=Nexus'"><div class="card-body"><div class="card-title">${m.title}</div><div class="meta"><span>${m.year}</span><span>${m.license_type}</span></div><div class="actions"><button class="btn btn-primary" onclick="play('${m.youtube_id}')">▶ Watch</button>${m.direct_download && m.direct_download!=='stream_only' ? `<button class="btn btn-sec" onclick="dl(${m.id})">💾 DL</button>` : ''}</div></div></div>`).join('');
+      } catch(e) { el.innerHTML='<div class="empty">Load failed.</div>'; }
+    }
+
+    // Actions
+    function play(id) { if(!token) return openModal("auth-modal"); triggerSync(()=>{ document.getElementById("yt-frame").src=`https://www.youtube.com/embed/${id}?autoplay=1&rel=0`; openModal("video-modal"); }); }
+    async function dl(id) { if(!token) return openModal("auth-modal"); triggerSync(async()=>{ try { const r=await fetch(`${API}/movies/download/${id}`,{method:"POST",headers:{Authorization:token}}); const d=await r.json(); if(!r.ok) throw new Error(d.detail); window.open(d.url,"_blank"); toast("✅ Started! -1 Token"); tokens--; updateUI(); } catch(e) { toast("❌ "+e.message); if(e.message.includes("Token")) openVault(); } }); }
+
+    // Sync Mechanic
+    function triggerSync(cb) { fetch(`${API}/ads/next`).then(r=>r.json()).then(ad=>{ if(ad.skip){cb();return;} currentAd=ad; pendingAction=cb; document.getElementById("sync-img").src=ad.url; syncTime=0; updateSyncUI(); openModal("sync-modal"); }); }
+    const btn=document.getElementById("sync-btn");
+    function startSync(){ btn.classList.add("holding"); syncInterval=setInterval(()=>{syncTime+=0.1;updateSyncUI();if(syncTime>=syncTarget)completeSync();},100); }
+    function stopSync(){ btn.classList.remove("holding"); clearInterval(syncInterval); if(syncTime<syncTarget) syncTime=Math.max(0,syncTime-0.5); updateSyncUI(); }
+    btn.addEventListener("pointerdown",startSync); btn.addEventListener("pointerup",stopSync); btn.addEventListener("pointerleave",stopSync);
+    btn.addEventListener("touchstart", e=>{ e.preventDefault(); startSync(); }); btn.addEventListener("touchend", stopSync);
+    function updateSyncUI(){ document.getElementById("sync-bar").style.width=`${(syncTime/syncTarget)*100}%`; document.getElementById("sync-timer").textContent=`${syncTime.toFixed(1)}s / ${syncTarget.toFixed(1)}s`; }
+    async function completeSync(){ clearInterval(syncInterval); syncTime=syncTarget; updateSyncUI(); try { const r=await fetch(`${API}/ads/complete`,{method:"POST",headers:{Authorization:token,"Content-Type":"application/json"},body:JSON.stringify({ad_id:currentAd.ad_id})}); const d=await r.json(); if(d.tokens){tokens+=d.tokens;updateUI();toast(`✨ +${d.tokens}`);} closeModal("sync-modal"); if(pendingAction)pendingAction(); } catch(e){toast("❌ Sync failed"); abortSync();} }
+    function abortSync(){clearInterval(syncInterval);closeModal("sync-modal");}
+
+    // Vault & Daily
+    function openVault(){if(!token)return openModal("auth-modal");openModal("vault-modal");}
+    async function claimDaily(){ try{ const r=await fetch(`${API}/user/claim-daily`,{method:"POST",headers:{Authorization:token}}); const d=await r.json(); if(!r.ok) throw new Error(d.detail); tokens+=d.added; updateUI(); closeModal("vault-modal"); toast(d.message); } catch(e){toast("❌ "+e.message);} }
+
+    // Admin Panel
+    document.addEventListener("keydown", e=>{ if(e.ctrlKey && e.shiftKey && e.key==="A"){ e.preventDefault(); const s=prompt("Admin Secret:"); if(s==="nexus-admin-2025"){loadAdmin();document.getElementById("admin-panel").style.display="block";} else toast("🚫 Denied"); }});
+    function switchTab(tab){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.getElementById(tab+'-tab').classList.add('active'); document.querySelectorAll('.tab')[['treasury','leads','logs'].indexOf(tab)].classList.add('active'); if(tab==='treasury')loadTreasury(); if(tab==='leads')loadLeads('all'); if(tab==='logs')loadLogs(); }
+    async function loadAdmin(){ switchTab('treasury'); }
+    async function loadTreasury(){ try{ const r=await fetch(`${API}/admin/dashboard`,{headers:{"X-Admin-Secret":"nexus-admin-2025"}}); const d=await r.json(); document.getElementById("treasury-balance").textContent=`$${d.treasury_balance?.toFixed(2) || '0.00'}`; } catch(e){} }
+    async function deposit(){ const amt=document.getElementById("deposit-amount").value; if(!amt) return; toast("✅ Deposited (Demo)"); loadTreasury(); }
+    async function triggerAgent(){ toast("🤖 Agent cycle triggered..."); await fetch(`${API}/agent/run`,{method:"POST",headers:{"X-Admin-Secret":"nexus-admin-2025"}}); toast("✅ Cycle complete"); loadLeads('all'); loadLogs(); }
+    async function loadLeads(status){ try{ const r=await fetch(`${API}/agent/leads`,{headers:{"X-Admin-Secret":"nexus-admin-2025"}}); const leads=await r.json(); document.getElementById("leads-table").innerHTML=`<tr><th>Company</th><th>Domain</th><th>Score</th><th>Status</th><th>Action</th></tr>`+leads.map(l=>`<tr><td>${l.company}</td><td>${l.domain}</td><td style="color:${l.score>85?'var(--cyan)':'#aaa'}">${l.score}</td><td class="status-${l.status}">${l.status}</td><td><button class="btn btn-primary" onclick="outreach(${l.id})">Send</button></td></tr>`).join(''); } catch(e){} }
+    async function outreach(id){ await fetch(`${API}/agent/run`,{method:"POST",headers:{"X-Admin-Secret":"nexus-admin-2025"}}); toast("✅ Outreach queued"); loadLeads('all'); }
+    async function loadLogs(){ try{ const r=await fetch(`${API}/agent/logs`,{headers:{"X-Admin-Secret":"nexus-admin-2025"}}); const logs=await r.json(); document.getElementById("agent-logs").innerHTML=logs.map(l=>`<div class="log-row"><span style="color:var(--cyan)">[${l.timestamp.split("T")[1].split(".")[0]}]</span> <strong>${l.task}</strong>: ${l.details}</div>`).join(''); } catch(e){} }
+
+    // Init
+    window.onload=()=>{ 
+      if(token){fetch(`${API}/user/status`,{headers:{Authorization:token}}).then(r=>r.json()).then(d=>{tokens=d.tokens;updateUI();}).catch(()=>{localStorage.removeItem("nexus_token");openModal("auth-modal");});} 
+      load("full","m-cards"); load("trailers","t-cards"); 
+    };
+
+    // Particles
+    for(let i=0;i<20;i++){const p=document.createElement("div");p.className="p";p.style.width=p.style.height=`${Math.random()*3+1}px`;p.style.left=`${Math.random()*100}%`;p.style.top=`${Math.random()*100}%`;p.style.animationDelay=`${Math.random()*10}s`;document.getElementById("bg").appendChild(p);}
+  </script>
+</body>
+</html>
